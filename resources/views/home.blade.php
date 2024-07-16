@@ -1,100 +1,103 @@
 @extends('layouts.app')
 
+@section('title', 'Home')
+
 @section('content')
-<h1>Input Data</h1>
-<form action="{{ route('calculate') }}" method="POST">
-    @csrf
-    <h2>Kriteria</h2>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nama Kriteria</th>
-                <th>Bobot</th>
-                <th>Type</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for ($i = 1; $i <= 5; $i++)
-                <tr>
-                    <td>
-                        <input type="text" name="kriteria{{ $i }}" class="form-control" required>
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" name="bobot{{ $i }}" class="form-control" required>
-                    </td>
-                    <td>
-                        <select name="type{{ $i }}" class="form-control" required>
-                            <option value="benefit">Benefit</option>
-                            <option value="cost">Cost</option>
-                        </select>
-                    </td>
-                </tr>
-            @endfor
-        </tbody>
-    </table>
-
-    <h2>Alternatif</h2>
-    <table class="table" id="alternatifTable">
-        <thead>
-            <tr>
-                <th>Nama Alternatif</th>
-                <th>Bobot</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for ($i = 1; $i <= 5; $i++)
-                <tr>
-                    <td>
-                        <input type="text" name="nama_alternatif{{ $i }}" class="form-control" value="Alternatif {{ $i }}" required>
-                    </td>
-                    <td>
-                        @for ($j = 1; $j <= 5; $j++)
-                            <div class="form-group">
-                                <label for="alt{{ $i }}_krit{{ $j }}">Kriteria {{ $j }}:</label>
-                                <input type="number" step="0.01" name="alt{{ $i }}_krit{{ $j }}" class="form-control" required>
-                            </div>
+<div class="container-fluid">
+    <form action="{{ route('calculate') }}" method="POST">
+        @csrf
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Kriteria</h3>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nama Kriteria</th>
+                            <th>Bobot</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for ($i = 1; $i <= 5; $i++)
+                        <tr>
+                            <td><input type="text" name="kriteria{{ $i }}" class="form-control" required></td>
+                            <td><input type="number" name="bobot{{ $i }}" step="0.01" class="form-control" required></td>
+                            <td>
+                                <select name="type{{ $i }}" class="form-control" required>
+                                    <option value="benefit">Benefit</option>
+                                    <option value="cost">Cost</option>
+                                </select>
+                            </td>
+                        </tr>
                         @endfor
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger remove-row">Remove</button>
-                    </td>
-                </tr>
-            @endfor
-        </tbody>
-    </table>
-    <button type="button" id="addRow" class="btn btn-success">Add Row</button>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-    <button type="submit" class="btn btn-primary">Hitung</button>
-</form>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Alternatif</h3>
+                <button type="button" id="addRow" class="btn btn-primary float-right">Tambah Alternatif</button>
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered" id="alternatifTable">
+                    <thead>
+                        <tr>
+                            <th>Nama Alternatif</th>
+                            @for ($i = 1; $i <= 5; $i++)
+                                <th>Bobot Kriteria {{ $i }}</th>
+                            @endfor
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" name="nama_alternatif1" class="form-control" required></td>
+                            @for ($j = 1; $j <= 5; $j++)
+                                <td><input type="number" name="alt1_krit{{ $j }}" step="0.01" class="form-control" required></td>
+                            @endfor
+                            <td><button type="button" class="btn btn-danger removeRow">Hapus</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            <button type="submit" class="btn btn-success">Hitung</button>
+        </div>
+    </form>
+</div>
 
 <script>
-    document.getElementById('addRow').addEventListener('click', function() {
-        let table = document.getElementById('alternatifTable').getElementsByTagName('tbody')[0];
-        let rowCount = table.rows.length + 1;
-        let row = table.insertRow();
-        row.innerHTML = `
-            <td>
-                <input type="text" name="nama_alternatif${rowCount}" class="form-control" value="Alternatif ${rowCount}" required>
-            </td>
-            <td>
-                ${Array.from({ length: 5 }, (_, j) => `
-                    <div class="form-group">
-                        <label for="alt${rowCount}_krit${j+1}">Kriteria ${j+1}:</label>
-                        <input type="number" step="0.01" name="alt${rowCount}_krit${j+1}" class="form-control" required>
-                    </div>
-                `).join('')}
-            </td>
-            <td>
-                <button type="button" class="btn btn-danger remove-row">Remove</button>
-            </td>
-        `;
+document.addEventListener('DOMContentLoaded', function () {
+    let rowCount = 1;
+
+    document.getElementById('addRow').addEventListener('click', function () {
+        rowCount++;
+        const row = `<tr>
+            <td><input type="text" name="nama_alternatif${rowCount}" class="form-control" required></td>
+            @for ($j = 1; $j <= 5; $j++)
+                <td><input type="number" name="alt${rowCount}_krit{{ $j }}" step="0.01" class="form-control" required></td>
+            @endfor
+            <td><button type="button" class="btn btn-danger removeRow">Hapus</button></td>
+        </tr>`;
+        document.querySelector('#alternatifTable tbody').insertAdjacentHTML('beforeend', row);
+        attachRemoveRowEvent();
     });
 
-    document.getElementById('alternatifTable').addEventListener('click', function(event) {
-        if (event.target.classList.contains('remove-row')) {
-            event.target.closest('tr').remove();
-        }
-    });
+    function attachRemoveRowEvent() {
+        document.querySelectorAll('.removeRow').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                btn.closest('tr').remove();
+            });
+        });
+    }
+
+    attachRemoveRowEvent();
+});
 </script>
 @endsection
