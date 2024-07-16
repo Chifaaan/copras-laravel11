@@ -31,7 +31,9 @@ class CalculationController extends Controller
         }
 
         $alternatives = [];
+        $alternative_names = [];
         for ($i = 1; $i <= $num_alternatives; $i++) {
+            $alternative_names[] = $request->input("nama_alternatif$i");
             $alternative = [];
             for ($j = 1; $j <= 5; $j++) {
                 $alternative[] = $request->input("alt{$i}_krit{$j}");
@@ -39,6 +41,7 @@ class CalculationController extends Controller
             $alternatives[] = $alternative;
         }
 
+        
         // Langkah 1: Normalisasi
         $normalized = $this->normalize($alternatives, $num_alternatives, 5);
 
@@ -57,7 +60,7 @@ class CalculationController extends Controller
         $rank = 1;
         foreach ($Q as $alt => $q_value) {
             $results[] = [
-                'alternative' => $request->input("nama_alternatif" . ($alt + 1)),
+                'alternative' => $alternative_names[$alt],
                 'qi' => $q_value,
                 'rank' => $rank++
             ];
@@ -108,8 +111,14 @@ class CalculationController extends Controller
         $calculation = Calculation::findOrFail($id);
         $criteria = json_decode($calculation->criteria, true);
         $alternatives = json_decode($calculation->alternatives, true);
+        $results = json_decode($calculation->results, true);
 
         $num_alternatives = count($alternatives);
+
+        $alternative_names = [];
+        foreach ($results as $result) {
+            $alternative_names[] = $result['alternative'];
+        }
 
         $normalized = $this->normalize($alternatives, $num_alternatives, 5);
         $weighted = $this->weighted($normalized, $criteria['weights'], $num_alternatives, 5);
@@ -122,7 +131,7 @@ class CalculationController extends Controller
         $rank = 1;
         foreach ($Q as $alt => $q_value) {
             $results[] = [
-                'alternative' => 'Alternatif ' . ($alt + 1),
+                'alternative' => $alternative_names[$alt] ?? 'Alternatif ' . ($alt + 1),
                 'qi' => $q_value,
                 'rank' => $rank++
             ];
